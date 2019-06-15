@@ -1,0 +1,8 @@
+.git/
+quicklisp/
+quickdist/
+build/
+postgresql-data/
+logs/
+new-libs/
+db/dumps/

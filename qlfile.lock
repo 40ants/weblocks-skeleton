@@ -1,0 +1,15 @@
+("quicklisp" .
+ (:class qlot.source.ql:source-ql-all
+  :initargs (:distribution "http://beta.quicklisp.org/dist/quicklisp.txt" :%version :latest)
+  :version "2019-03-07"))
+("ultralisp" .
+ (:class qlot.source.ql:source-ql-all
+  :initargs (:distribution "http://dist.ultralisp.org/" :%version :latest)
+  :version "20190503194000"))
+("slynk-named-readtables" .
+ (:class qlot.source.github:source-github
+  :initargs (:project-name "slynk-named-readtables" :repos "joaotavora/sly-named-readtables" :ref nil :branch nil :tag nil)
+  :version "github-df4ed79064cf85275804e201899b677bef4ab3f5"
+  :repos "joaotavora/sly-named-readtables"
+  :url "https://github.com/joaotavora/sly-named-readtables/archive/df4ed79064cf85275804e201899b677bef4ab3f5.tar.gz"
+  :ref "df4ed79064cf85275804e201899b677bef4ab3f5"))

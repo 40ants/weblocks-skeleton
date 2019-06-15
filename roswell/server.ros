@@ -1,0 +1,26 @@
+#!/bin/sh
+#|-*- mode:lisp -*-|#
+#|
+exec ros dynamic-space-size=4000 -Q -- $0 "$@"
+|#
+(declaim (optimize (debug 3)
+                   (safety 3)
+                   (speed 1)))
+
+(progn ;;init forms
+  (ros:ensure-asdf)
+  ;; load system with all dependencies
+
+  #+quicklisp
+  (progn (ql:quickload :app/server))
+  #-quicklisp
+  (progn (asdf:load-system :app/server)))
+
+(defpackage :ros.script.server
+  (:use :cl)
+  (:import-from #:app/server
+                #:main))
+(in-package :ros.script.server)
+
+
+

@@ -1,0 +1,78 @@
+#|-*- mode:lisp -*-|#
+;; (in-package :cl-user)
+(ql:quickload '(:cl-strings :qlot) :silent t)
+
+(defpackage :lake.user
+  (:use :cl :lake)
+  (:import-from #:alexandria
+                #:read-file-into-string)
+  (:import-from #:cl-strings
+                #:split)
+  (:import-from #:named-readtables
+                #:in-readtable)
+  (:shadowing-import-from #:lake
+                          #:directory))
+(in-package lake.user)
+
+(in-readtable :interpol-syntax)
+
+
+(defun get-current-version ()
+  (qlot:with-local-quicklisp (*default-pathname-defaults*
+                              :central-registry (list *default-pathname-defaults*))
+    (setf (uiop:getenv "CC") "gcc")
+    (qlot:quickload :app :silent t)
+    (asdf:system-version (asdf:find-system :app))))
+
+
+(defun get-app-name ()
+  (qlot:with-local-quicklisp (*default-pathname-defaults*
+                              :central-registry (list *default-pathname-defaults*))
+    (setf (uiop:getenv "CC") "gcc")
+    (qlot:quickload :app :silent t)
+    (string-downcase (uiop:symbol-call :app/variables :get-app-name))))
+
+
+(defvar tag #?"40ants/${(get-app-name)}:${(get-current-version)}")
+
+
+(task "version" ()
+      (format t #?"Current-version: ${(get-current-version)}~%Docker tag: ${tag}~%"))
+
+
+(task "build" ()
+      (sh #?"docker build --target base -t ${tag} ."))
+
+
+(task "push" ("build")
+      (sh #?"docker push ${tag}"))
+
+(file "qlfile.lock" ("qlfile")
+      (sh "qlot update"))
+
+(task "deps" ("qlfile.lock")
+      ;; Here you need to install gen-deps-system using this command
+      ;; ros install 40ants/gen-deps-system
+      (sh "qlot exec ros run --eval '(ql:quickload :app)' --eval '(uiop:quit)'")
+      (sh "qlot exec gen-deps-system --except sb-concurrency,sb-bsd-sockets,sb-cltl2,sb-introspect,sb-posix,sb-rotate-byte,asdf app"))
+
+(task "devserver" ("deps")
+      (sh "docker-compose up --abort-on-container-exit app"))
+
+(task "dump-db" ()
+      (sh "docker-compose run --rm db-ops dump"))
+
+(task "restore-db" ()
+      (sh "docker stop ${(get-app-name}_app")
+      (sh "docker-compose run --rm db-ops restore"))
+
+(task "generate-migration" ()
+      (sh "docker-compose rm --stop --force empty-postgres")
+      (sh "docker-compose build mito")
+      (sh "docker-compose run --rm mito generate-migration"))
+
+(task "migrate" ()
+      (sh "docker-compose run --rm mito migrate"))
+
+(task "default" ("devserver")
+      ())
